@@ -1,6 +1,6 @@
 # 2D Jigsaw Puzzle Game
 
-A fully-featured HTML5 canvas-based jigsaw puzzle game built with TypeScript and SCSS. Create puzzles from preset images or upload your own!
+A fully-featured HTML5 canvas-based jigsaw puzzle game built with TypeScript and SCSS. Create puzzles from preset images or upload your own! **The game automatically saves your progress** - close your browser and return days later to continue exactly where you left off.
 
 ## 🎮 Gameplay
 
@@ -12,7 +12,7 @@ A fully-featured HTML5 canvas-based jigsaw puzzle game built with TypeScript and
 
 ### Image Categories
 - **Kittens** (5 images): Adorable cats and kittens
-- **Baby Seals** (5 images): Cute marine mammals
+- **Ocean** (5 images): Marine life and underwater scenes
 - **Landscapes** (5 images): Stunning nature photography
 
 ### Playing
@@ -21,12 +21,13 @@ A fully-featured HTML5 canvas-based jigsaw puzzle game built with TypeScript and
 - **Group formation**: Connected pieces move together as a unit
 - **Visual feedback**: Correctly placed pieces have subtle highlighting
 - **Progress tracking**: Watch your completion percentage
-- **Auto-save**: Game state persists across browser sessions
+- **Auto-save**: Game state persists across browser sessions - **resume anytime!**
 
 ### Controls
 - **Mouse drag**: Move puzzle pieces
 - **Piece count slider**: Choose 30-300 pieces before starting
 - **New Game button**: Start over at any time
+- **Auto-hide header**: Move mouse to top of screen to access menu during gameplay
 
 ## 🚀 Getting Started
 
@@ -102,8 +103,10 @@ npm run build
 ### Technical Features
 - **TypeScript**: Full type safety and modern JavaScript features
 - **HTML5 Canvas**: Hardware-accelerated rendering
+- **Dark Theme**: Modern UI with subtle patterns background
+- **Auto-Hide Header**: Sliding header with mouse detection for distraction-free gameplay
 - **Modular Design**: Clean separation of concerns
-- **State Persistence**: LocalStorage with automatic compression
+- **State Persistence**: LocalStorage with automatic compression - **never lose progress**
 - **Responsive**: Works on desktop and mobile devices
 - **Error Handling**: Graceful failure recovery
 
@@ -122,9 +125,11 @@ src/
 └── index.ts             # Application entry point
 
 assets/
+├── bg/                  # Background patterns
+│   └── subtle_patterns_toptal-prism.png
 └── images/              # Local preset images
     ├── kittens/         # Cat images
-    ├── seals/           # Seal images
+    ├── ocean/           # Marine life images
     └── landscapes/      # Nature images
 ```
 
@@ -151,10 +156,20 @@ This game was built collaboratively with Claude AI over multiple sessions:
 - **CORS Resolution**: Downloaded images locally to eliminate cross-origin issues
 - **Polish**: Added error handling, loading states, and user feedback
 
+### Session 4: Dark Theme & UI Enhancement  
+- **Dark Theme Implementation**: Complete visual overhaul with subtle patterns background
+- **Auto-Hide Sliding Header**: Mouse-activated header with 500ms delay and 20px detection zone
+- **Image Gallery Reorganization**: Renamed "seals" to "ocean" category with proper marine-themed images
+- **Modal Layout Enhancement**: Expanded to 700px width for perfect 5-column image grid
+- **Image Asset Updates**: Replaced problematic images with high-quality Unsplash alternatives
+- **Header Sensitivity Optimization**: Refined mouse detection to prevent accidental triggers
+
 ### Key Technical Decisions
 - **No External Frameworks**: Pure TypeScript/HTML5 for maximum performance
 - **Canvas-Based**: Hardware acceleration for smooth 60fps gameplay  
 - **Local Assets**: Embedded images to avoid CORS and network dependencies
+- **Dark Theme Design**: Modern aesthetic with subtle texture patterns
+- **Progressive Enhancement**: Auto-hide UI for distraction-free gameplay
 - **Modular Architecture**: Clean separation for maintainability
 - **Type Safety**: Full TypeScript coverage for bug prevention
 
@@ -171,9 +186,11 @@ This game was built collaboratively with Claude AI over multiple sessions:
 - Change piece complexity in puzzle generation algorithm
 
 ### Styling
-- Main styles in `src/styles.scss`
-- Uses SCSS variables for easy color/spacing customization
-- Responsive design with CSS Grid and Flexbox
+- **Dark Theme**: Modern dark UI with subtle texture backgrounds
+- **Main styles**: All styling in `src/styles.scss`
+- **SCSS variables**: Easy color/spacing customization
+- **Responsive design**: CSS Grid and Flexbox layouts
+- **Auto-hide header**: Sliding animation with mouse detection
 
 ## 🐛 Known Limitations
 

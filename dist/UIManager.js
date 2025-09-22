@@ -6,6 +6,8 @@ export class UIManager {
         this.selectedGalleryImageId = null;
         this.currentCategory = 'kittens';
         this.headerTimer = null;
+        this.headerShowTimer = null;
+        this.lastMouseY = 0;
         this.initializeElements();
         this.setupEventListeners();
         this.initializeGallery();
@@ -200,15 +202,21 @@ export class UIManager {
         if (this.headerTimer) {
             clearTimeout(this.headerTimer);
         }
+        if (this.headerShowTimer) {
+            clearTimeout(this.headerShowTimer);
+        }
     }
     initializeHeaderBehavior() {
         // Show header on page load if there's a saved state
         this.checkForSavedState();
-        // Mouse detection at top of screen
+        // Mouse detection at top of screen with improved sensitivity
         document.addEventListener('mousemove', (e) => {
-            if (e.clientY <= 50) { // Mouse near top of screen
-                this.showHeader();
+            const currentY = e.clientY;
+            // Only trigger if mouse is within 20px of top and moving slowly upward
+            if (currentY <= 20 && (this.lastMouseY === 0 || currentY < this.lastMouseY + 5)) {
+                this.scheduleHeaderShow();
             }
+            this.lastMouseY = currentY;
         });
         // Auto-hide when mouse leaves header area
         this.headerElement.addEventListener('mouseleave', () => {
@@ -222,9 +230,24 @@ export class UIManager {
     showHeader() {
         this.headerElement.classList.add('visible');
         this.cancelHeaderHide();
+        this.cancelHeaderShow();
     }
     hideHeader() {
         this.headerElement.classList.remove('visible');
+    }
+    scheduleHeaderShow() {
+        if (this.headerShowTimer || this.headerElement.classList.contains('visible')) {
+            return; // Already scheduled or already visible
+        }
+        this.headerShowTimer = window.setTimeout(() => {
+            this.showHeader();
+        }, 500); // Longer delay before showing (500ms)
+    }
+    cancelHeaderShow() {
+        if (this.headerShowTimer) {
+            clearTimeout(this.headerShowTimer);
+            this.headerShowTimer = null;
+        }
     }
     scheduleHeaderHide() {
         this.cancelHeaderHide();

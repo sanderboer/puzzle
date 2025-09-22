@@ -26,6 +26,8 @@ export class UIManager {
     private errorOverlay?: HTMLElement;
     private headerElement!: HTMLElement;
     private headerTimer: number | null = null;
+    private headerShowTimer: number | null = null;
+    private lastMouseY: number = 0;
 
     constructor() {
         this.initializeElements();
@@ -264,17 +266,25 @@ export class UIManager {
         if (this.headerTimer) {
             clearTimeout(this.headerTimer);
         }
+        if (this.headerShowTimer) {
+            clearTimeout(this.headerShowTimer);
+        }
     }
 
     private initializeHeaderBehavior(): void {
         // Show header on page load if there's a saved state
         this.checkForSavedState();
 
-        // Mouse detection at top of screen
+        // Mouse detection at top of screen with improved sensitivity
         document.addEventListener('mousemove', (e) => {
-            if (e.clientY <= 50) { // Mouse near top of screen
-                this.showHeader();
+            const currentY = e.clientY;
+            
+            // Only trigger if mouse is within 20px of top and moving slowly upward
+            if (currentY <= 20 && (this.lastMouseY === 0 || currentY < this.lastMouseY + 5)) {
+                this.scheduleHeaderShow();
             }
+            
+            this.lastMouseY = currentY;
         });
 
         // Auto-hide when mouse leaves header area
@@ -291,10 +301,28 @@ export class UIManager {
     private showHeader(): void {
         this.headerElement.classList.add('visible');
         this.cancelHeaderHide();
+        this.cancelHeaderShow();
     }
 
     private hideHeader(): void {
         this.headerElement.classList.remove('visible');
+    }
+
+    private scheduleHeaderShow(): void {
+        if (this.headerShowTimer || this.headerElement.classList.contains('visible')) {
+            return; // Already scheduled or already visible
+        }
+        
+        this.headerShowTimer = window.setTimeout(() => {
+            this.showHeader();
+        }, 500); // Longer delay before showing (500ms)
+    }
+
+    private cancelHeaderShow(): void {
+        if (this.headerShowTimer) {
+            clearTimeout(this.headerShowTimer);
+            this.headerShowTimer = null;
+        }
     }
 
     private scheduleHeaderHide(): void {
