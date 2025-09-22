@@ -2,6 +2,10 @@
 
 A fully-featured HTML5 canvas-based jigsaw puzzle game built with TypeScript and SCSS. Create puzzles from preset images or upload your own! **The game automatically saves your progress** - close your browser and return days later to continue exactly where you left off.
 
+![Gameplay Screenshot](assets/screenshots/gameplay.png)
+
+*Experience smooth drag-and-drop puzzle gameplay with automatic piece snapping and progress saving*
+
 ## 🎮 Gameplay
 
 ### Starting a Puzzle
@@ -127,6 +131,8 @@ src/
 assets/
 ├── bg/                  # Background patterns
 │   └── subtle_patterns_toptal-prism.png
+├── screenshots/         # Documentation images
+│   └── gameplay.png     # Main gameplay screenshot
 └── images/              # Local preset images
     ├── kittens/         # Cat images
     ├── ocean/           # Marine life images
