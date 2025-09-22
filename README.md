@@ -1,5 +1,7 @@
 # 2D Jigsaw Puzzle Game
 
+**🎮 [Play Now →](https://sanderboer.github.io/puzzle/)**
+
 A fully-featured HTML5 canvas-based jigsaw puzzle game built with TypeScript and SCSS. Create puzzles from preset images or upload your own! **The game automatically saves your progress** - close your browser and return days later to continue exactly where you left off.
 
 ![Gameplay Screenshot](assets/screenshots/gameplay.png)
@@ -77,6 +79,8 @@ This project includes a GitHub Action that automatically deploys to GitHub Pages
    - Deploy to GitHub Pages
 
 3. **Access your game** at: `https://yourusername.github.io/repository-name`
+
+**Live Demo:** This game is deployed at [https://sanderboer.github.io/puzzle/](https://sanderboer.github.io/puzzle/)
 
 The deployment happens automatically on every push to the main branch using the workflow in `.github/workflows/deploy.yml`.
 
