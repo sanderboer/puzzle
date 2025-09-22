@@ -1,0 +1,223 @@
+// Styles / variables
+$primary: #3498db;
+$primary-hover: #2980b9;
+$accent: #2ecc71;
+$accent-hover: #27ae60;
+$bg: #f5f5f5;
+$text: #333;
+$white: #fff;
+$border: #ddd;
+
+@mixin card {
+    background-color: $white;
+    border: 2px solid $border;
+    border-radius: 8px;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: $bg;
+    color: $text;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.hidden { display: none !important; }
+
+#app { 
+    height: 100vh; 
+    display: flex; 
+    flex-direction: column; 
+}
+
+#minimal-header { 
+    display: flex; 
+    justify-content: flex-end; 
+    align-items: center; 
+    padding: 15px 20px; 
+    @include card; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+    flex-shrink: 0;
+}
+
+button { padding:8px 16px; border:none; border-radius:4px; background:$primary; color:white; cursor:pointer; font-size:14px; transition:background-color .3s;
+    &:hover { background:$primary-hover; }
+    &:disabled { background:#bdc3c7; cursor:not-allowed; }
+}
+
+#start-game-btn { background:$accent; &:hover { background:$accent-hover; } }
+#new-game-btn { background:$primary; }
+
+main {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+#game-container { 
+    flex: 1;
+    display: flex; 
+}
+#puzzle-canvas { 
+    flex: 1; 
+    background: $white; 
+    border: none; 
+    cursor: grab; 
+    display: block;
+    &:active { cursor: grabbing; }
+}
+
+
+#menu-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.55); display:flex; align-items:center; justify-content:center; z-index:100;
+    #menu-content { @include card; padding:25px 30px; width:500px; max-width:90%; box-shadow:0 4px 12px rgba(0,0,0,0.25);
+        h2 { margin-top:0; }
+        
+        .image-option-tabs {
+            display: flex;
+            border-bottom: 1px solid $border;
+            margin-bottom: 15px;
+            
+            .tab-btn {
+                background: none;
+                border: none;
+                padding: 10px 15px;
+                cursor: pointer;
+                border-bottom: 2px solid transparent;
+                color: #666;
+                
+                &.active {
+                    color: $primary;
+                    border-bottom-color: $primary;
+                }
+                
+                &:hover:not(.active) {
+                    background: #f8f9fa;
+                }
+            }
+        }
+        
+        .tab-content {
+            display: none;
+            
+            &.active {
+                display: block;
+            }
+        }
+        
+        .image-categories {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            
+            .category-btn {
+                padding: 8px 16px;
+                background: #f8f9fa;
+                color: #666;
+                border: 1px solid $border;
+                font-size: 14px;
+                
+                &.active {
+                    background: $primary;
+                    color: white;
+                    border-color: $primary;
+                }
+                
+                &:hover:not(.active) {
+                    background: #e9ecef;
+                }
+            }
+        }
+        
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            
+            .gallery-image {
+                aspect-ratio: 1;
+                border: 2px solid $border;
+                border-radius: 8px;
+                overflow: hidden;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                
+                &:hover {
+                    border-color: $primary;
+                    transform: scale(1.05);
+                }
+                
+                &.selected {
+                    border-color: $accent;
+                    border-width: 3px;
+                    transform: scale(1.02);
+                }
+                
+                img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    display: block;
+                }
+            }
+        }
+        
+        #image-preview { margin-top:10px; img { max-width:100%; display:block; border:1px solid $border; border-radius:4px; } }
+        #piece-count { margin:15px 0; }
+        input[type='range'] { width:100%; }
+    }
+}
+
+
+
+@media (max-width:768px) {
+    #minimal-header { 
+        padding: 10px; 
+    }
+}
+
+.error-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.error-message {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    max-width: 400px;
+    
+    p {
+        color: #d32f2f;
+        font-weight: bold;
+        margin: 0 0 15px 0;
+    }
+    
+    .error-dismiss {
+        background: $primary;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        
+        &:hover {
+            background: #2c75a6;
+        }
+    }
+}

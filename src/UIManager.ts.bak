@@ -1,0 +1,156 @@
+import { DOMUtils, ImageUtils } from './utils.js';
+import { defaultImages, getImagesByCategory, DefaultImage } from './defaultImages.js';
+import { defaultImages, getImagesByCategory, DefaultImage } from './defaultImages.js';
+
+export class UIManager {
+    private menuOverlay!: HTMLElement;
+    private pieceSlider!: HTMLInputElement;
+    private pieceCountValue!: HTMLElement;
+    private imageInput!: HTMLInputElement;
+    private imagePreview!: HTMLElement;
+    private startBtn!: HTMLButtonElement;
+    private newGameBtn!: HTMLButtonElement;
+
+
+    private currentImageBlobUrl: string | null = null;
+    private onImageSelected?: (imageUrl: string) => void;
+    private onStartGame?: () => void;
+    private onNewGame?: () => void;
+    private onPieceCountChanged?: (count: number) => void;
+    private errorOverlay?: HTMLElement;
+
+    constructor() {
+        this.initializeElements();
+        this.setupEventListeners();
+    }
+
+    private initializeElements(): void {
+        this.menuOverlay = DOMUtils.getElementById('menu-overlay');
+        this.pieceSlider = DOMUtils.getElementById<HTMLInputElement>('piece-slider');
+        this.pieceCountValue = DOMUtils.getElementById('piece-count-value');
+        this.imageInput = DOMUtils.getElementById<HTMLInputElement>('image-input');
+        this.imagePreview = DOMUtils.getElementById('image-preview');
+        this.startBtn = DOMUtils.getElementById<HTMLButtonElement>('start-game-btn');
+        this.newGameBtn = DOMUtils.getElementById<HTMLButtonElement>('new-game-btn');
+    }
+
+    private setupEventListeners(): void {
+        this.pieceSlider.addEventListener('input', () => {
+            const count = parseInt(this.pieceSlider.value, 10);
+            this.pieceCountValue.textContent = String(count);
+            this.onPieceCountChanged?.(count);
+        });
+
+        this.startBtn.addEventListener('click', () => {
+            this.onStartGame?.();
+        });
+
+        this.newGameBtn.addEventListener('click', () => {
+            this.onNewGame?.();
+        });
+
+        this.imageInput.addEventListener('change', () => {
+            this.handleImageSelection();
+        });
+    }
+
+    private handleImageSelection(): void {
+        if (!this.imageInput.files || !this.imageInput.files[0]) {
+            return;
+        }
+
+        const file = this.imageInput.files[0];
+        const url = URL.createObjectURL(file);
+
+        ImageUtils.revokeBlobUrl(this.currentImageBlobUrl);
+        this.currentImageBlobUrl = url;
+
+        const img = new Image();
+        img.onload = () => {
+            this.updateImagePreview(url);
+            this.onImageSelected?.(url);
+        };
+        img.onerror = (err) => {
+            console.error('Image load error:', err);
+        };
+        img.src = url;
+    }
+
+    private updateImagePreview(imageUrl: string): void {
+        this.imagePreview.innerHTML = '';
+        const thumbnail = document.createElement('img');
+        thumbnail.src = imageUrl;
+        thumbnail.style.maxWidth = '160px';
+        thumbnail.style.maxHeight = '120px';
+        thumbnail.alt = 'Preview';
+        this.imagePreview.appendChild(thumbnail);
+    }
+
+    showMenu(): void {
+        this.menuOverlay.classList.remove('hidden');
+    }
+
+    hideMenu(): void {
+        this.menuOverlay.classList.add('hidden');
+    }
+
+
+
+    getPieceCount(): number {
+        return parseInt(this.pieceSlider.value, 10);
+    }
+
+    getSelectedImageUrl(): string | null {
+        return this.currentImageBlobUrl;
+    }
+
+    hasSelectedImage(): boolean {
+        return !!(this.imageInput.files && this.imageInput.files[0]);
+    }
+
+    setCallbacks(callbacks: {
+        onImageSelected?: (imageUrl: string) => void;
+        onStartGame?: () => void;
+        onNewGame?: () => void;
+        onPieceCountChanged?: (count: number) => void;
+    }): void {
+        this.onImageSelected = callbacks.onImageSelected;
+        this.onStartGame = callbacks.onStartGame;
+        this.onNewGame = callbacks.onNewGame;
+        this.onPieceCountChanged = callbacks.onPieceCountChanged;
+    }
+
+    cleanup(): void {
+        ImageUtils.revokeBlobUrl(this.currentImageBlobUrl);
+        this.currentImageBlobUrl = null;
+    }
+
+    showError(message: string, duration: number = 5000): void {
+        this.clearError();
+        
+        this.errorOverlay = document.createElement('div');
+        this.errorOverlay.className = 'error-overlay';
+        this.errorOverlay.innerHTML = `
+            <div class="error-message">
+                <p>${message}</p>
+                <button class="error-dismiss">OK</button>
+            </div>
+        `;
+        
+        const dismissBtn = this.errorOverlay.querySelector('.error-dismiss') as HTMLButtonElement;
+        dismissBtn.addEventListener('click', () => this.clearError());
+        
+        document.body.appendChild(this.errorOverlay);
+        
+        if (duration > 0) {
+            setTimeout(() => this.clearError(), duration);
+        }
+    }
+
+    clearError(): void {
+        if (this.errorOverlay && this.errorOverlay.parentNode) {
+            this.errorOverlay.parentNode.removeChild(this.errorOverlay);
+            this.errorOverlay = undefined;
+        }
+    }
+}

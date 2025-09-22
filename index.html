@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2D Jigsaw Puzzle Game</title>
+    <link rel="stylesheet" href="dist/styles.css">
+</head>
+<body>
+    <div id="app">
+        <header id="minimal-header">
+            <button id="new-game-btn">New Game</button>
+        </header>
+
+        <main>
+            <div id="game-container">
+                <canvas id="puzzle-canvas"></canvas>
+            </div>
+        </main>
+
+        <div id="menu-overlay" class="hidden">
+            <div id="menu-content">
+                <h2>Start New Puzzle</h2>
+                <div id="image-selection">
+                    <div class="image-option-tabs">
+                        <button class="tab-btn active" data-tab="gallery">Gallery</button>
+                        <button class="tab-btn" data-tab="upload">Upload</button>
+                    </div>
+                    
+                    <div id="gallery-tab" class="tab-content active">
+                        <div class="image-categories">
+                            <button class="category-btn active" data-category="kittens">Kittens</button>
+                            <button class="category-btn" data-category="seals">Baby Seals</button>
+                            <button class="category-btn" data-category="landscapes">Landscapes</button>
+                        </div>
+                        <div id="image-gallery" class="image-grid">
+                            <!-- Default images will be populated here -->
+                        </div>
+                    </div>
+                    
+                    <div id="upload-tab" class="tab-content">
+                        <label for="image-input">Choose Image:</label>
+                        <input type="file" id="image-input" accept="image/*">
+                        <div id="image-preview"></div>
+                    </div>
+                </div>
+                <div id="piece-count">
+                    <label for="piece-slider">Number of Pieces: <span id="piece-count-value">100</span></label>
+                    <input type="range" id="piece-slider" min="30" max="300" value="100" step="10">
+                </div>
+                <button id="start-game-btn">Start Puzzle</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="dist/index.js"></script>
+</body>
+</html>
