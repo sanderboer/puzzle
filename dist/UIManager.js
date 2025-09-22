@@ -5,9 +5,11 @@ export class UIManager {
         this.currentImageBlobUrl = null;
         this.selectedGalleryImageId = null;
         this.currentCategory = 'kittens';
+        this.headerTimer = null;
         this.initializeElements();
         this.setupEventListeners();
         this.initializeGallery();
+        this.initializeHeaderBehavior();
     }
     initializeElements() {
         this.menuOverlay = DOMUtils.getElementById('menu-overlay');
@@ -22,6 +24,7 @@ export class UIManager {
         this.tabContents = document.querySelectorAll('.tab-content');
         this.categoryButtons = document.querySelectorAll('.category-btn');
         this.imageGallery = DOMUtils.getElementById('image-gallery');
+        this.headerElement = DOMUtils.getElementById('minimal-header');
     }
     setupEventListeners() {
         this.pieceSlider.addEventListener('input', () => {
@@ -194,6 +197,60 @@ export class UIManager {
         ImageUtils.revokeBlobUrl(this.currentImageBlobUrl);
         this.currentImageBlobUrl = null;
         this.selectedGalleryImageId = null;
+        if (this.headerTimer) {
+            clearTimeout(this.headerTimer);
+        }
+    }
+    initializeHeaderBehavior() {
+        // Show header on page load if there's a saved state
+        this.checkForSavedState();
+        // Mouse detection at top of screen
+        document.addEventListener('mousemove', (e) => {
+            if (e.clientY <= 50) { // Mouse near top of screen
+                this.showHeader();
+            }
+        });
+        // Auto-hide when mouse leaves header area
+        this.headerElement.addEventListener('mouseleave', () => {
+            this.scheduleHeaderHide();
+        });
+        // Cancel hide when mouse enters header
+        this.headerElement.addEventListener('mouseenter', () => {
+            this.cancelHeaderHide();
+        });
+    }
+    showHeader() {
+        this.headerElement.classList.add('visible');
+        this.cancelHeaderHide();
+    }
+    hideHeader() {
+        this.headerElement.classList.remove('visible');
+    }
+    scheduleHeaderHide() {
+        this.cancelHeaderHide();
+        this.headerTimer = window.setTimeout(() => {
+            this.hideHeader();
+        }, 2000);
+    }
+    cancelHeaderHide() {
+        if (this.headerTimer) {
+            clearTimeout(this.headerTimer);
+            this.headerTimer = null;
+        }
+    }
+    checkForSavedState() {
+        // Check if there's a saved game state
+        try {
+            const savedState = localStorage.getItem('puzzle-game-state');
+            if (savedState) {
+                // Show header briefly on load if there's a saved state
+                this.showHeader();
+                this.scheduleHeaderHide();
+            }
+        }
+        catch (error) {
+            // Ignore localStorage errors
+        }
     }
     showError(message, duration = 5000) {
         this.clearError();

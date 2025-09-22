@@ -30,36 +30,36 @@ export const defaultImages = [
         category: 'kittens',
         title: 'Black Kitten'
     },
-    // Baby Seals - Local images
+    // Ocean - Local images
     {
-        id: 'seal-1',
-        url: 'assets/images/seals/seal-1.jpg',
-        category: 'seals',
-        title: 'Harbor Seal Pup'
+        id: 'ocean-1',
+        url: 'assets/images/ocean/ocean-1.jpg',
+        category: 'ocean',
+        title: 'Marine Life'
     },
     {
-        id: 'seal-2',
-        url: 'assets/images/seals/seal-2.jpg',
-        category: 'seals',
-        title: 'Gray Seal'
+        id: 'ocean-2',
+        url: 'assets/images/ocean/ocean-2.jpg',
+        category: 'ocean',
+        title: 'Ocean Scene'
     },
     {
-        id: 'seal-3',
-        url: 'assets/images/seals/seal-3.jpg',
-        category: 'seals',
-        title: 'Spotted Seal'
+        id: 'ocean-3',
+        url: 'assets/images/ocean/ocean-3.jpg',
+        category: 'ocean',
+        title: 'Sea Life'
     },
     {
-        id: 'seal-4',
-        url: 'assets/images/seals/seal-4.jpg',
-        category: 'seals',
-        title: 'Seal on Rock'
+        id: 'ocean-4',
+        url: 'assets/images/ocean/ocean-4.jpg',
+        category: 'ocean',
+        title: 'Ocean Waves'
     },
     {
-        id: 'seal-5',
-        url: 'assets/images/seals/seal-5.jpg',
-        category: 'seals',
-        title: 'Baby Seal'
+        id: 'ocean-5',
+        url: 'assets/images/ocean/ocean-5.jpg',
+        category: 'ocean',
+        title: 'Ocean Sunset'
     },
     // Landscapes - Local images
     {

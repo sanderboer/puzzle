@@ -18,17 +18,20 @@ export class UIManager {
 
     private currentImageBlobUrl: string | null = null;
     private selectedGalleryImageId: string | null = null;
-    private currentCategory: 'kittens' | 'seals' | 'landscapes' = 'kittens';
+    private currentCategory: 'kittens' | 'ocean' | 'landscapes' = 'kittens';
     private onImageSelected?: (imageUrl: string) => void;
     private onStartGame?: () => void;
     private onNewGame?: () => void;
     private onPieceCountChanged?: (count: number) => void;
     private errorOverlay?: HTMLElement;
+    private headerElement!: HTMLElement;
+    private headerTimer: number | null = null;
 
     constructor() {
         this.initializeElements();
         this.setupEventListeners();
         this.initializeGallery();
+        this.initializeHeaderBehavior();
     }
 
     private initializeElements(): void {
@@ -45,6 +48,7 @@ export class UIManager {
         this.tabContents = document.querySelectorAll('.tab-content');
         this.categoryButtons = document.querySelectorAll('.category-btn');
         this.imageGallery = DOMUtils.getElementById('image-gallery');
+        this.headerElement = DOMUtils.getElementById('minimal-header');
     }
 
     private setupEventListeners(): void {
@@ -79,7 +83,7 @@ export class UIManager {
         // Category switching
         this.categoryButtons.forEach(btn => {
             btn.addEventListener('click', () => {
-                const category = btn.getAttribute('data-category') as 'kittens' | 'seals' | 'landscapes';
+                const category = btn.getAttribute('data-category') as 'kittens' | 'ocean' | 'landscapes';
                 if (category) {
                     this.switchCategory(category);
                 }
@@ -103,7 +107,7 @@ export class UIManager {
         this.clearSelection();
     }
 
-    private switchCategory(category: 'kittens' | 'seals' | 'landscapes'): void {
+    private switchCategory(category: 'kittens' | 'ocean' | 'landscapes'): void {
         this.currentCategory = category;
         
         // Update category buttons
@@ -257,6 +261,68 @@ export class UIManager {
         ImageUtils.revokeBlobUrl(this.currentImageBlobUrl);
         this.currentImageBlobUrl = null;
         this.selectedGalleryImageId = null;
+        if (this.headerTimer) {
+            clearTimeout(this.headerTimer);
+        }
+    }
+
+    private initializeHeaderBehavior(): void {
+        // Show header on page load if there's a saved state
+        this.checkForSavedState();
+
+        // Mouse detection at top of screen
+        document.addEventListener('mousemove', (e) => {
+            if (e.clientY <= 50) { // Mouse near top of screen
+                this.showHeader();
+            }
+        });
+
+        // Auto-hide when mouse leaves header area
+        this.headerElement.addEventListener('mouseleave', () => {
+            this.scheduleHeaderHide();
+        });
+
+        // Cancel hide when mouse enters header
+        this.headerElement.addEventListener('mouseenter', () => {
+            this.cancelHeaderHide();
+        });
+    }
+
+    private showHeader(): void {
+        this.headerElement.classList.add('visible');
+        this.cancelHeaderHide();
+    }
+
+    private hideHeader(): void {
+        this.headerElement.classList.remove('visible');
+    }
+
+    private scheduleHeaderHide(): void {
+        this.cancelHeaderHide();
+        this.headerTimer = window.setTimeout(() => {
+            this.hideHeader();
+        }, 2000);
+    }
+
+    private cancelHeaderHide(): void {
+        if (this.headerTimer) {
+            clearTimeout(this.headerTimer);
+            this.headerTimer = null;
+        }
+    }
+
+    private checkForSavedState(): void {
+        // Check if there's a saved game state
+        try {
+            const savedState = localStorage.getItem('puzzle-game-state');
+            if (savedState) {
+                // Show header briefly on load if there's a saved state
+                this.showHeader();
+                this.scheduleHeaderHide();
+            }
+        } catch (error) {
+            // Ignore localStorage errors
+        }
     }
 
     showError(message: string, duration: number = 5000): void {
