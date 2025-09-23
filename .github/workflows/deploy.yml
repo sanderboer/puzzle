@@ -43,11 +43,18 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v4
         
+      - name: Create deployment directory
+        run: |
+          mkdir -p deploy
+          cp index.html deploy/
+          cp -r dist deploy/
+          cp -r assets deploy/
+        
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository
-          path: '.'
+          # Upload only the files needed for the website
+          path: 'deploy'
 
   # Deployment job
   deploy:
