@@ -154,6 +154,9 @@ export class TouchManager {
             const rawScale = currentDistance / this.pinchData.startDistance;
             // Dampen the zoom to make it less sensitive
             const dampedScale = 1 + (rawScale - 1) * 0.5;
+            console.log('PINCH ZOOM DEBUG:');
+            console.log('  Pinch center (scaled):', this.pinchData.centerX, this.pinchData.centerY);
+            console.log('  Scale factor:', dampedScale);
             this.onPinch(dampedScale, this.pinchData.centerX, this.pinchData.centerY);
             this.pinchData.startDistance = currentDistance;
         }

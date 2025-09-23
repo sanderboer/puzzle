@@ -34,9 +34,14 @@ export class ViewportManager {
         if (newZoom === oldZoom)
             return;
         if (centerX !== undefined && centerY !== undefined) {
+            console.log('VIEWPORT ZOOM DEBUG:');
+            console.log('  Center coordinates:', centerX, centerY);
+            console.log('  Canvas dimensions:', this.canvas.width, this.canvas.height);
             const worldPoint = this.screenToWorld({ x: centerX, y: centerY });
+            console.log('  World point:', worldPoint);
             this.viewport.zoom = newZoom;
             const newScreenPoint = this.worldToScreen(worldPoint);
+            console.log('  New screen point:', newScreenPoint);
             this.viewport.x += (centerX - newScreenPoint.x) / this.viewport.zoom;
             this.viewport.y += (centerY - newScreenPoint.y) / this.viewport.zoom;
         }
