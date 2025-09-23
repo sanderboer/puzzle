@@ -33,6 +33,11 @@ export class TouchManager {
         // Scale coordinates to match canvas resolution
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
+        // Add safety check for invalid scaling
+        if (!isFinite(scaleX) || !isFinite(scaleY) || scaleX <= 0 || scaleY <= 0) {
+            console.warn('Invalid canvas scaling detected, using CSS coordinates');
+            return { x, y };
+        }
         console.log('COORDINATE SCALING DEBUG:');
         console.log('  Raw touch:', clientX, clientY);
         console.log('  Canvas rect:', rect.left, rect.top, rect.width, rect.height);
@@ -208,14 +213,25 @@ export class TouchManager {
         const touch2 = touchArray[1];
         const distance = Math.sqrt(Math.pow(touch2.currentX - touch1.currentX, 2) +
             Math.pow(touch2.currentY - touch1.currentY, 2));
-        // Calculate center in SCREEN coordinates (CSS coordinates) for zoom center
+        // For pinch zoom center, we need SCREEN coordinates (CSS coordinates)
+        // Get the raw touch positions and calculate center in CSS space
         const rect = this.element.getBoundingClientRect();
+        // Convert scaled coordinates back to CSS coordinates
         const canvas = this.element;
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
-        // Convert scaled coordinates back to screen coordinates for zoom center
-        const centerX = ((touch1.currentX + touch2.currentX) / 2) / scaleX;
-        const centerY = ((touch1.currentY + touch2.currentY) / 2) / scaleY;
+        const cssX1 = touch1.currentX / scaleX;
+        const cssY1 = touch1.currentY / scaleY;
+        const cssX2 = touch2.currentX / scaleX;
+        const cssY2 = touch2.currentY / scaleY;
+        const centerX = (cssX1 + cssX2) / 2;
+        const centerY = (cssY1 + cssY2) / 2;
+        console.log('PINCH INIT DEBUG:');
+        console.log('  Touch 1 scaled:', touch1.currentX, touch1.currentY);
+        console.log('  Touch 2 scaled:', touch2.currentX, touch2.currentY);
+        console.log('  Touch 1 CSS:', cssX1, cssY1);
+        console.log('  Touch 2 CSS:', cssX2, cssY2);
+        console.log('  Center CSS:', centerX, centerY);
         this.pinchData = {
             startDistance: distance,
             startZoom: 1,
