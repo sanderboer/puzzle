@@ -32,8 +32,8 @@ export class ViewportManager {
     }
 
     pan(deltaX: number, deltaY: number): void {
-        this.viewport.x += deltaX / this.viewport.zoom;
-        this.viewport.y += deltaY / this.viewport.zoom;
+        this.viewport.x -= deltaX / this.viewport.zoom;
+        this.viewport.y -= deltaY / this.viewport.zoom;
         this.constrainViewport();
     }
 
