@@ -24,24 +24,36 @@ export class TouchManager {
         this.element.addEventListener('touchend', (e) => this.handleTouchEnd(e), { passive: false });
         this.element.addEventListener('touchcancel', (e) => this.handleTouchCancel(e), { passive: false });
     }
+    getScaledCoordinates(clientX, clientY) {
+        const rect = this.element.getBoundingClientRect();
+        const canvas = this.element;
+        // Get coordinates relative to canvas CSS bounds
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+        // Scale coordinates to match canvas resolution
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        return {
+            x: x * scaleX,
+            y: y * scaleY
+        };
+    }
     handleTouchStart(event) {
         event.preventDefault();
         for (let i = 0; i < event.changedTouches.length; i++) {
             const touch = event.changedTouches[i];
-            const rect = this.element.getBoundingClientRect();
-            const x = touch.clientX - rect.left;
-            const y = touch.clientY - rect.top;
+            const coords = this.getScaledCoordinates(touch.clientX, touch.clientY);
             this.activeTouches.set(touch.identifier, {
                 identifier: touch.identifier,
-                startX: x,
-                startY: y,
-                currentX: x,
-                currentY: y
+                startX: coords.x,
+                startY: coords.y,
+                currentX: coords.x,
+                currentY: coords.y
             });
             if (this.activeTouches.size === 1) {
                 // Check if a piece was selected for dragging
                 console.log('Single finger touch, checking for piece selection...');
-                this.isDraggingPiece = this.onTouchStart(x, y);
+                this.isDraggingPiece = this.onTouchStart(coords.x, coords.y);
                 console.log('Piece selection result:', this.isDraggingPiece);
             }
             else if (this.activeTouches.size === 2) {
@@ -58,11 +70,9 @@ export class TouchManager {
             const touchData = this.activeTouches.get(touch.identifier);
             if (!touchData)
                 continue;
-            const rect = this.element.getBoundingClientRect();
-            const x = touch.clientX - rect.left;
-            const y = touch.clientY - rect.top;
-            touchData.currentX = x;
-            touchData.currentY = y;
+            const coords = this.getScaledCoordinates(touch.clientX, touch.clientY);
+            touchData.currentX = coords.x;
+            touchData.currentY = coords.y;
         }
         if (this.activeTouches.size === 1) {
             this.handleSingleTouchMove();
