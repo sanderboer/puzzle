@@ -124,21 +124,22 @@ export class Game {
         
         this.touchManager = new TouchManager(
             canvas,
-            (deltaX, deltaY) => {
+            (x, y) => this.handleTouchStart(x, y),           // onTouchStart - returns boolean if piece selected
+            (x, y, deltaX, deltaY) => this.handleTouchMove(x, y, deltaX, deltaY),  // onTouchMove
+            (x, y) => this.handleTouchEnd(x, y),             // onTouchEnd
+            (deltaX, deltaY) => {                            // onPan
                 viewportManager.pan(deltaX, deltaY);
                 this.draw();
             },
-            (scale, centerX, centerY) => {
+            (scale, centerX, centerY) => {                   // onPinch
                 viewportManager.zoom(scale, centerX, centerY);
                 this.draw();
             },
-            (x, y) => this.handleTouch(x, y),
-            (x, y) => {
+            (x, y) => this.handleTouch(x, y),                // onTap
+            (x, y) => {                                      // onDoubleTap
                 this.renderer.fitToContent(this.pieces);
                 this.draw();
-            },
-            (x, y) => this.handleTouchStart(x, y),
-            (x, y) => this.handleTouchEnd(x, y)
+            }
         );
         
         window.addEventListener('resize', () => {
@@ -572,8 +573,8 @@ export class Game {
         }
     }
 
-    private handleTouchStart(x: number, y: number): void {
-        if (this.gameState !== 'playing') return;
+    private handleTouchStart(x: number, y: number): boolean {
+        if (this.gameState !== 'playing') return false;
         
         const viewportManager = this.renderer.getViewportManager();
         const worldCoords = viewportManager.screenToWorld({ x, y });
@@ -594,8 +595,27 @@ export class Game {
                         y: groupPiece.y
                     }))
                 };
-                break;
+                
+                this.draw();
+                return true; // Piece was selected
             }
+        }
+        
+        return false; // No piece selected
+    }
+
+    private handleTouchMove(x: number, y: number, deltaX: number, deltaY: number): void {
+        if (this.gameState !== 'playing' || !this.draggedPiece || !this.groupDragData) return;
+        
+        const viewportManager = this.renderer.getViewportManager();
+        const worldCoords = viewportManager.screenToWorld({ x, y });
+        
+        const deltaWorldX = worldCoords.x - this.groupDragData.startMouseX;
+        const deltaWorldY = worldCoords.y - this.groupDragData.startMouseY;
+        
+        for (const groupPieceData of this.groupDragData.pieces) {
+            groupPieceData.piece.x = groupPieceData.x + deltaWorldX;
+            groupPieceData.piece.y = groupPieceData.y + deltaWorldY;
         }
         
         this.draw();

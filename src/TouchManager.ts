@@ -7,15 +7,17 @@ export class TouchManager {
     private lastTapPosition: Position = { x: 0, y: 0 };
     private readonly DOUBLE_TAP_THRESHOLD = 300;
     private readonly DOUBLE_TAP_DISTANCE = 30;
+    private isDraggingPiece = false;
 
     constructor(
         private element: HTMLElement,
+        private onTouchStart: (x: number, y: number) => boolean, // Returns true if piece was selected
+        private onTouchMove: (x: number, y: number, deltaX: number, deltaY: number) => void,
+        private onTouchEnd: (x: number, y: number) => void,
         private onPan: (deltaX: number, deltaY: number) => void,
         private onPinch: (scale: number, centerX: number, centerY: number) => void,
         private onTap: (x: number, y: number) => void,
-        private onDoubleTap: (x: number, y: number) => void,
-        private onTouchStart: (x: number, y: number) => void,
-        private onTouchEnd: (x: number, y: number) => void
+        private onDoubleTap: (x: number, y: number) => void
     ) {
         this.setupTouchEvents();
     }
@@ -45,8 +47,11 @@ export class TouchManager {
             });
 
             if (this.activeTouches.size === 1) {
-                this.onTouchStart(x, y);
+                // Check if a piece was selected for dragging
+                this.isDraggingPiece = this.onTouchStart(x, y);
             } else if (this.activeTouches.size === 2) {
+                // Two fingers - start pinch/pan gesture
+                this.isDraggingPiece = false;
                 this.initializePinch();
             }
         }
@@ -71,7 +76,7 @@ export class TouchManager {
         if (this.activeTouches.size === 1) {
             this.handleSingleTouchMove();
         } else if (this.activeTouches.size === 2) {
-            this.handlePinchMove();
+            this.handleTwoFingerMove();
         }
     }
 
@@ -97,6 +102,10 @@ export class TouchManager {
         } else if (this.activeTouches.size === 1) {
             this.initializeSingleTouchAfterPinch();
         }
+
+        if (this.activeTouches.size === 0) {
+            this.isDraggingPiece = false;
+        }
     }
 
     private handleTouchCancel(event: TouchEvent): void {
@@ -105,6 +114,7 @@ export class TouchManager {
             this.activeTouches.delete(touch.identifier);
         }
         this.pinchData = null;
+        this.isDraggingPiece = false;
     }
 
     private handleSingleTouchMove(): void {
@@ -115,31 +125,60 @@ export class TouchManager {
         const deltaX = touch.currentX - touch.startX;
         const deltaY = touch.currentY - touch.startY;
 
-        if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
-            this.onPan(-deltaX, -deltaY);
-            touch.startX = touch.currentX;
-            touch.startY = touch.currentY;
+        if (this.isDraggingPiece) {
+            // If dragging a piece, send move events to the game
+            this.onTouchMove(touch.currentX, touch.currentY, deltaX, deltaY);
+        } else {
+            // If not dragging a piece, pan the viewport (but only after some movement threshold)
+            if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
+                this.onPan(-deltaX, -deltaY);
+                touch.startX = touch.currentX;
+                touch.startY = touch.currentY;
+            }
         }
     }
 
-    private handlePinchMove(): void {
-        if (!this.pinchData) return;
-
+    private handleTwoFingerMove(): void {
         const touchArray = Array.from(this.activeTouches.values());
         if (touchArray.length !== 2) return;
 
         const touch1 = touchArray[0];
         const touch2 = touchArray[1];
 
-        const currentDistance = Math.sqrt(
-            Math.pow(touch2.currentX - touch1.currentX, 2) +
-            Math.pow(touch2.currentY - touch1.currentY, 2)
-        );
+        if (this.pinchData) {
+            // Handle pinch zoom
+            const currentDistance = Math.sqrt(
+                Math.pow(touch2.currentX - touch1.currentX, 2) +
+                Math.pow(touch2.currentY - touch1.currentY, 2)
+            );
 
-        const scale = currentDistance / this.pinchData.startDistance;
-        this.onPinch(scale, this.pinchData.centerX, this.pinchData.centerY);
-
-        this.pinchData.startDistance = currentDistance;
+            const rawScale = currentDistance / this.pinchData.startDistance;
+            // Dampen the zoom to make it less sensitive
+            const dampedScale = 1 + (rawScale - 1) * 0.5;
+            
+            this.onPinch(dampedScale, this.pinchData.centerX, this.pinchData.centerY);
+            this.pinchData.startDistance = currentDistance;
+        } else {
+            // Handle two-finger pan
+            const centerX = (touch1.currentX + touch2.currentX) / 2;
+            const centerY = (touch1.currentY + touch2.currentY) / 2;
+            
+            const prevCenterX = (touch1.startX + touch2.startX) / 2;
+            const prevCenterY = (touch1.startY + touch2.startY) / 2;
+            
+            const deltaX = centerX - prevCenterX;
+            const deltaY = centerY - prevCenterY;
+            
+            if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+                this.onPan(-deltaX, -deltaY);
+                
+                // Update start positions for continuous panning
+                touch1.startX = touch1.currentX;
+                touch1.startY = touch1.currentY;
+                touch2.startX = touch2.currentX;
+                touch2.startY = touch2.currentY;
+            }
+        }
     }
 
     private handleSingleTouchEnd(touchData: TouchData): void {
@@ -147,7 +186,8 @@ export class TouchManager {
         const deltaY = Math.abs(touchData.currentY - touchData.startY);
         const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
-        if (distance < 10) {
+        // Only register tap if there was minimal movement and no piece dragging
+        if (distance < 10 && !this.isDraggingPiece) {
             const now = Date.now();
             const timeSinceLastTap = now - this.lastTapTime;
             const distanceFromLastTap = Math.sqrt(
@@ -197,6 +237,7 @@ export class TouchManager {
         const touch = touchArray[0];
         touch.startX = touch.currentX;
         touch.startY = touch.currentY;
+        this.isDraggingPiece = false;
     }
 
     destroy(): void {
