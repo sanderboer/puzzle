@@ -9,7 +9,7 @@ yarn.lock         # Remove if you prefer to commit it
 pnpm-lock.yaml    # Remove if you prefer to commit it
 
 # Build outputs (uncomment dist/ if you don't want to commit built files)
-dist/
+# dist/ - committing dist files for GitHub Pages deployment
 *.tsbuildinfo
 
 # Environment variables

@@ -1,0 +1,287 @@
+body {
+  font-family: "Arial", sans-serif;
+  background: #1a1a1a url("/assets/bg/subtle_patterns_toptal-prism.png") repeat;
+  color: #e0e0e0;
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.hidden {
+  display: none !important;
+}
+
+#app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#minimal-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transform: translateY(-100%);
+  transition: transform 0.3s ease-in-out;
+}
+#minimal-header.visible {
+  transform: translateY(0);
+}
+#minimal-header #viewport-controls {
+  display: flex;
+  gap: 8px;
+}
+#minimal-header #viewport-controls button {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: bold;
+  background: rgba(255, 255, 255, 0.1);
+  color: #e0e0e0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+#minimal-header #viewport-controls button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  background: #3498db;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+button:hover {
+  background: #2980b9;
+}
+button:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+}
+
+#start-game-btn {
+  background: #2ecc71;
+}
+#start-game-btn:hover {
+  background: #27ae60;
+}
+
+#new-game-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e0e0e0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0;
+}
+#new-game-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+main {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  padding-top: 0;
+}
+
+#game-container {
+  flex: 1;
+  display: flex;
+}
+
+#puzzle-canvas {
+  flex: 1;
+  background: transparent;
+  border: none;
+  cursor: grab;
+  display: block;
+  touch-action: none;
+  user-select: none;
+}
+#puzzle-canvas:active {
+  cursor: grabbing;
+}
+
+#menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+#menu-overlay #menu-content {
+  background-color: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  padding: 25px 30px;
+  width: 700px;
+  max-width: 95%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+#menu-overlay #menu-content h2 {
+  margin-top: 0;
+}
+#menu-overlay #menu-content .image-option-tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  margin-bottom: 15px;
+}
+#menu-overlay #menu-content .image-option-tabs .tab-btn {
+  background: none;
+  border: none;
+  padding: 10px 15px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  color: rgba(255, 255, 255, 0.6);
+}
+#menu-overlay #menu-content .image-option-tabs .tab-btn.active {
+  color: #3498db;
+  border-bottom-color: #3498db;
+}
+#menu-overlay #menu-content .image-option-tabs .tab-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+}
+#menu-overlay #menu-content .tab-content {
+  display: none;
+}
+#menu-overlay #menu-content .tab-content.active {
+  display: block;
+}
+#menu-overlay #menu-content .image-categories {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+#menu-overlay #menu-content .image-categories .category-btn {
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 14px;
+}
+#menu-overlay #menu-content .image-categories .category-btn.active {
+  background: #3498db;
+  color: white;
+  border-color: #3498db;
+}
+#menu-overlay #menu-content .image-categories .category-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.9);
+}
+#menu-overlay #menu-content .image-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+#menu-overlay #menu-content .image-grid .gallery-image {
+  aspect-ratio: 1;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+#menu-overlay #menu-content .image-grid .gallery-image:hover {
+  border-color: #3498db;
+  transform: scale(1.05);
+}
+#menu-overlay #menu-content .image-grid .gallery-image.selected {
+  border-color: #2ecc71;
+  border-width: 3px;
+  transform: scale(1.02);
+}
+#menu-overlay #menu-content .image-grid .gallery-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+#menu-overlay #menu-content #image-preview {
+  margin-top: 10px;
+}
+#menu-overlay #menu-content #image-preview img {
+  max-width: 100%;
+  display: block;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+#menu-overlay #menu-content #piece-count {
+  margin: 15px 0;
+}
+#menu-overlay #menu-content input[type=range] {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  #minimal-header {
+    padding: 10px;
+  }
+}
+.error-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.error-message {
+  background-color: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  max-width: 400px;
+}
+.error-message p {
+  color: #ff6b6b;
+  font-weight: bold;
+  margin: 0 0 15px 0;
+}
+.error-message .error-dismiss {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.error-message .error-dismiss:hover {
+  background: #2980b9;
+}
+
+/*# sourceMappingURL=styles.css.map */
