@@ -1,7 +1,8 @@
 import { PuzzlePiece } from './PuzzlePiece.js';
 import { UIManager } from './UIManager.js';
 import { CanvasRenderer } from './CanvasRenderer.js';
-import { GameState, Timer, ScatterPosition, GroupDragData } from './types.js';
+import { TouchManager } from './TouchManager.js';
+import { GameState, Timer, ScatterPosition, GroupDragData, Position } from './types.js';
 import { 
     GAME_CONSTANTS, 
     MathUtils, 
@@ -29,6 +30,7 @@ export class Game {
     private uiManager: UIManager;
     private renderer: CanvasRenderer;
     private saveManager: SaveManager;
+    private touchManager: TouchManager | null = null;
 
     constructor() {
         try {
@@ -49,7 +51,26 @@ export class Game {
         this.uiManager.setCallbacks({
             onStartGame: () => this.startGame(),
             onNewGame: () => this.startNewGame(),
-            onPieceCountChanged: (count) => this.updatePieceCount(count)
+            onPieceCountChanged: (count) => this.updatePieceCount(count),
+            onZoomIn: () => {
+                const viewportManager = this.renderer.getViewportManager();
+                viewportManager.zoom(1.2);
+                this.draw();
+            },
+            onZoomOut: () => {
+                const viewportManager = this.renderer.getViewportManager();
+                viewportManager.zoom(0.8);
+                this.draw();
+            },
+            onResetZoom: () => {
+                const viewportManager = this.renderer.getViewportManager();
+                viewportManager.resetViewport();
+                this.draw();
+            },
+            onFitContent: () => {
+                this.renderer.fitToContent(this.pieces);
+                this.draw();
+            }
         });
     }
 
@@ -94,14 +115,36 @@ export class Game {
 
     private setupCanvasEvents(): void {
         const canvas = this.renderer.getCanvas();
+        const viewportManager = this.renderer.getViewportManager();
         
         canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
         canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
         canvas.addEventListener('mouseup', (e) => this.handleMouseUp(e));
+        canvas.addEventListener('wheel', (e) => this.handleWheel(e), { passive: false });
+        
+        this.touchManager = new TouchManager(
+            canvas,
+            (deltaX, deltaY) => {
+                viewportManager.pan(deltaX, deltaY);
+                this.draw();
+            },
+            (scale, centerX, centerY) => {
+                viewportManager.zoom(scale, centerX, centerY);
+                this.draw();
+            },
+            (x, y) => this.handleTouch(x, y),
+            (x, y) => {
+                this.renderer.fitToContent(this.pieces);
+                this.draw();
+            },
+            (x, y) => this.handleTouchStart(x, y),
+            (x, y) => this.handleTouchEnd(x, y)
+        );
         
         window.addEventListener('resize', () => {
             if (this.gameState === 'playing') {
                 this.resizeCanvas();
+                this.renderer.updateViewportBounds(this.pieces);
                 this.draw();
             }
         });
@@ -151,6 +194,9 @@ export class Game {
             this.generatePieces();
             this.resizeCanvas();
             this.shufflePieces();
+            
+            this.renderer.updateViewportBounds(this.pieces);
+            this.renderer.getViewportManager().resetViewport();
             
         this.gameState = 'playing';
         this.seedCache.clear();
@@ -417,18 +463,20 @@ export class Game {
         if (this.gameState !== 'playing') return;
 
         try {
-            const coords = DOMUtils.getCanvasCoordinates(event, this.renderer.getCanvas());
+            const viewportManager = this.renderer.getViewportManager();
+            const screenCoords = DOMUtils.getCanvasCoordinates(event, this.renderer.getCanvas());
+            const worldCoords = viewportManager.screenToWorld(screenCoords);
             
             for (let i = this.pieces.length - 1; i >= 0; i--) {
                 const piece = this.pieces[i];
-                if (piece.isPointInside(coords.x, coords.y)) {
+                if (piece.isPointInside(worldCoords.x, worldCoords.y)) {
                     this.draggedPiece = piece;
                     this.selectedPiece = piece;
                     const group = this.getGroup(piece);
                     
                     this.groupDragData = {
-                        startMouseX: coords.x,
-                        startMouseY: coords.y,
+                        startMouseX: worldCoords.x,
+                        startMouseY: worldCoords.y,
                         pieces: group.map(groupPiece => ({
                             piece: groupPiece,
                             x: groupPiece.x,
@@ -449,9 +497,11 @@ export class Game {
         if (this.gameState !== 'playing' || !this.draggedPiece || !this.groupDragData) return;
 
         try {
-            const coords = DOMUtils.getCanvasCoordinates(event, this.renderer.getCanvas());
-            const dx = coords.x - this.groupDragData.startMouseX;
-            const dy = coords.y - this.groupDragData.startMouseY;
+            const viewportManager = this.renderer.getViewportManager();
+            const screenCoords = DOMUtils.getCanvasCoordinates(event, this.renderer.getCanvas());
+            const worldCoords = viewportManager.screenToWorld(screenCoords);
+            const dx = worldCoords.x - this.groupDragData.startMouseX;
+            const dy = worldCoords.y - this.groupDragData.startMouseY;
 
             for (const entry of this.groupDragData.pieces) {
                 entry.piece.x = entry.x + dx;
@@ -490,6 +540,78 @@ export class Game {
             event.preventDefault();
             this.rotateGroup(this.getGroup(this.selectedPiece));
         }
+    }
+
+    private handleWheel(event: WheelEvent): void {
+        if (this.gameState !== 'playing') return;
+        
+        event.preventDefault();
+        const viewportManager = this.renderer.getViewportManager();
+        const rect = this.renderer.getCanvas().getBoundingClientRect();
+        const centerX = event.clientX - rect.left;
+        const centerY = event.clientY - rect.top;
+        const zoomFactor = event.deltaY > 0 ? 0.9 : 1.1;
+        
+        viewportManager.zoom(zoomFactor, centerX, centerY);
+        this.draw();
+    }
+
+    private handleTouch(x: number, y: number): void {
+        if (this.gameState !== 'playing') return;
+        
+        const viewportManager = this.renderer.getViewportManager();
+        const worldCoords = viewportManager.screenToWorld({ x, y });
+        
+        for (let i = this.pieces.length - 1; i >= 0; i--) {
+            const piece = this.pieces[i];
+            if (piece.isPointInside(worldCoords.x, worldCoords.y)) {
+                this.selectedPiece = piece;
+                this.draw();
+                break;
+            }
+        }
+    }
+
+    private handleTouchStart(x: number, y: number): void {
+        if (this.gameState !== 'playing') return;
+        
+        const viewportManager = this.renderer.getViewportManager();
+        const worldCoords = viewportManager.screenToWorld({ x, y });
+        
+        for (let i = this.pieces.length - 1; i >= 0; i--) {
+            const piece = this.pieces[i];
+            if (piece.isPointInside(worldCoords.x, worldCoords.y)) {
+                this.draggedPiece = piece;
+                this.selectedPiece = piece;
+                const group = this.getGroup(piece);
+                
+                this.groupDragData = {
+                    startMouseX: worldCoords.x,
+                    startMouseY: worldCoords.y,
+                    pieces: group.map(groupPiece => ({
+                        piece: groupPiece,
+                        x: groupPiece.x,
+                        y: groupPiece.y
+                    }))
+                };
+                break;
+            }
+        }
+        
+        this.draw();
+    }
+
+    private handleTouchEnd(_: number, __: number): void {
+        if (this.gameState !== 'playing' || !this.draggedPiece) {
+            this.groupDragData = null;
+            return;
+        }
+
+        this.checkConnections();
+        this.draggedPiece = null;
+        this.groupDragData = null;
+        this.saveManager.requestSave('piece_drop', this.getGameData());
+        this.draw();
     }
 
     private rotateGroup(group: PuzzlePiece[]): void {

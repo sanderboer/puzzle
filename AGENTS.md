@@ -3,13 +3,13 @@ Run dev: npm run dev (parallel TS & SCSS watch + local server at http://localhos
 Build once: npm run build (outputs dist/index.js, dist/styles.css). Optional: npm i -D eslint prettier jest.
 Lint: npx eslint 'src/**/*.ts' ; Format: npx prettier --write src
 Tests: none yet; add __tests__/*.test.ts with Jest; run all: npx jest
-Single test file: npx jest path/to/file.test.ts ; name: npx jest -t "piece path"
-Style: 4-space indent, single quotes, semicolons, ~120 char lines; keep spacing.
-Imports: ES modules; order external > internal; no wildcard; relative paths short.
+Single test file: npx jest path/to/file.test.ts ; name: npx jest -t "test description"
+Style: 4-space indent, single quotes, semicolons, ~120 char lines; keep spacing, trailing commas.
+Imports: ES modules with .js extension; order external > internal; no wildcard; relative paths short.
 Classes: PascalCase (Game, PuzzlePiece); methods/vars camelCase; constants UPPER_SNAKE for true immutables.
 Booleans prefixed is/has/can; functions verbs; avoid abbreviations except ctx (canvas context).
 Functions ~<60 lines; extract helpers for collision, geometry, animation if growing.
-Types: Use TS types/interfaces; JSDoc only for complex algorithms/edge cases.
+Types: Use TS types/interfaces; JSDoc only for complex algorithms/edge cases; strict mode enabled.
 Objects: Prefer const for references; avoid mutating shared arrays outside Game except via methods.
 Error handling: Use try/catch around image/file operations; log with console.error('context:', err); user-facing via overlay (avoid blocking alert in new code).
 Performance: Use requestAnimationFrame; keep draw throttling (16ms) intact; avoid layout thrash in loops.

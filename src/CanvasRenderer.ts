@@ -1,11 +1,13 @@
 import { PuzzlePiece } from './PuzzlePiece.js';
 import { GameState, Timer, ConnectionPoint } from './types.js';
 import { GAME_CONSTANTS, TimeUtils } from './utils.js';
+import { ViewportManager } from './ViewportManager.js';
 
 export class CanvasRenderer {
     private canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
     private lastDrawTime?: number;
+    private viewportManager: ViewportManager;
 
     constructor(canvasId: string) {
         this.canvas = document.getElementById(canvasId) as HTMLCanvasElement;
@@ -18,6 +20,7 @@ export class CanvasRenderer {
             throw new Error('Failed to get 2D rendering context');
         }
         this.ctx = context;
+        this.viewportManager = new ViewportManager(this.canvas);
     }
 
     getCanvas(): HTMLCanvasElement {
@@ -26,6 +29,10 @@ export class CanvasRenderer {
 
     getContext(): CanvasRenderingContext2D {
         return this.ctx;
+    }
+
+    getViewportManager(): ViewportManager {
+        return this.viewportManager;
     }
 
     resizeCanvas(containerElement: HTMLElement, gridCols: number, gridRows: number, pieceSize: number): void {
@@ -37,7 +44,10 @@ export class CanvasRenderer {
     }
 
     clear(): void {
+        this.ctx.save();
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.restore();
     }
 
     drawPieces(pieces: PuzzlePiece[], selectedPiece?: PuzzlePiece | null): void {
@@ -46,6 +56,9 @@ export class CanvasRenderer {
         }
 
         this.clear();
+
+        this.ctx.save();
+        this.viewportManager.applyTransform(this.ctx);
 
         const placedPieces = pieces.filter(p => p.placed);
         const unplacedPieces = pieces.filter(p => !p.placed);
@@ -57,6 +70,8 @@ export class CanvasRenderer {
         if (selectedPiece && !selectedPiece.placed) {
             this.drawSelectedPieceOutline(selectedPiece);
         }
+
+        this.ctx.restore();
     }
 
     private shouldThrottleRender(): boolean {
@@ -84,6 +99,9 @@ export class CanvasRenderer {
     ): void {
         if (selectedPiece.placed) return;
 
+        this.ctx.save();
+        this.viewportManager.applyTransform(this.ctx);
+
         for (const otherPiece of pieces) {
             if (otherPiece === selectedPiece) continue;
             if (getGroup(otherPiece) === getGroup(selectedPiece)) continue;
@@ -101,6 +119,8 @@ export class CanvasRenderer {
                 this.ctx.restore();
             }
         }
+
+        this.ctx.restore();
     }
 
     drawConnectionPreview(
@@ -108,6 +128,9 @@ export class CanvasRenderer {
         pieces: PuzzlePiece[],
         getGroup: (piece: PuzzlePiece) => PuzzlePiece[]
     ): void {
+        this.ctx.save();
+        this.viewportManager.applyTransform(this.ctx);
+
         for (const otherPiece of pieces) {
             if (otherPiece === draggedPiece) continue;
             if (getGroup(otherPiece) === getGroup(draggedPiece)) continue;
@@ -130,12 +153,15 @@ export class CanvasRenderer {
                 }
             }
         }
+
+        this.ctx.restore();
     }
 
 
 
     drawWinOverlay(timer: Timer): void {
         this.ctx.save();
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
         this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.fillStyle = '#fff';
@@ -172,10 +198,51 @@ export class CanvasRenderer {
             this.drawConnectionIndicators(selectedPiece, pieces, getGroup, canConnect);
         }
 
-
-
         if (gameState === 'completed' && timer) {
             this.drawWinOverlay(timer);
         }
+    }
+
+    updateViewportBounds(pieces: PuzzlePiece[]): void {
+        if (pieces.length === 0) return;
+
+        let minX = Infinity, maxX = -Infinity;
+        let minY = Infinity, maxY = -Infinity;
+
+        for (const piece of pieces) {
+            minX = Math.min(minX, piece.x);
+            maxX = Math.max(maxX, piece.x + piece.width);
+            minY = Math.min(minY, piece.y);
+            maxY = Math.max(maxY, piece.y + piece.height);
+        }
+
+        const padding = 200;
+        this.viewportManager.setPanBounds(
+            minX - padding,
+            maxX + padding,
+            minY - padding,
+            maxY + padding
+        );
+    }
+
+    fitToContent(pieces: PuzzlePiece[]): void {
+        if (pieces.length === 0) return;
+
+        let minX = Infinity, maxX = -Infinity;
+        let minY = Infinity, maxY = -Infinity;
+
+        for (const piece of pieces) {
+            minX = Math.min(minX, piece.x);
+            maxX = Math.max(maxX, piece.x + piece.width);
+            minY = Math.min(minY, piece.y);
+            maxY = Math.max(maxY, piece.y + piece.height);
+        }
+
+        this.viewportManager.fitToContent({
+            left: minX,
+            right: maxX,
+            top: minY,
+            bottom: maxY
+        });
     }
 }

@@ -53,3 +53,24 @@ export interface PieceShape {
     bottom: EdgeShape;
     left: EdgeShape;
 }
+
+export interface Viewport {
+    x: number;
+    y: number;
+    zoom: number;
+}
+
+export interface TouchData {
+    identifier: number;
+    startX: number;
+    startY: number;
+    currentX: number;
+    currentY: number;
+}
+
+export interface PinchData {
+    startDistance: number;
+    startZoom: number;
+    centerX: number;
+    centerY: number;
+}

@@ -10,6 +10,13 @@ export class UIManager {
     private startBtn!: HTMLButtonElement;
     private newGameBtn!: HTMLButtonElement;
     
+    // Viewport controls
+    private viewportControls!: HTMLElement;
+    private zoomInBtn!: HTMLButtonElement;
+    private zoomOutBtn!: HTMLButtonElement;
+    private resetZoomBtn!: HTMLButtonElement;
+    private fitContentBtn!: HTMLButtonElement;
+    
     // Gallery elements
     private tabButtons!: NodeListOf<HTMLElement>;
     private tabContents!: NodeListOf<HTMLElement>;
@@ -23,6 +30,10 @@ export class UIManager {
     private onStartGame?: () => void;
     private onNewGame?: () => void;
     private onPieceCountChanged?: (count: number) => void;
+    private onZoomIn?: () => void;
+    private onZoomOut?: () => void;
+    private onResetZoom?: () => void;
+    private onFitContent?: () => void;
     private errorOverlay?: HTMLElement;
     private headerElement!: HTMLElement;
     private headerTimer: number | null = null;
@@ -45,6 +56,13 @@ export class UIManager {
         this.startBtn = DOMUtils.getElementById<HTMLButtonElement>('start-game-btn');
         this.newGameBtn = DOMUtils.getElementById<HTMLButtonElement>('new-game-btn');
         
+        // Viewport controls
+        this.viewportControls = DOMUtils.getElementById('viewport-controls');
+        this.zoomInBtn = DOMUtils.getElementById<HTMLButtonElement>('zoom-in-btn');
+        this.zoomOutBtn = DOMUtils.getElementById<HTMLButtonElement>('zoom-out-btn');
+        this.resetZoomBtn = DOMUtils.getElementById<HTMLButtonElement>('reset-zoom-btn');
+        this.fitContentBtn = DOMUtils.getElementById<HTMLButtonElement>('fit-content-btn');
+        
         // Gallery elements
         this.tabButtons = document.querySelectorAll('.tab-btn');
         this.tabContents = document.querySelectorAll('.tab-content');
@@ -66,6 +84,23 @@ export class UIManager {
 
         this.newGameBtn.addEventListener('click', () => {
             this.onNewGame?.();
+        });
+
+        // Viewport controls
+        this.zoomInBtn.addEventListener('click', () => {
+            this.onZoomIn?.();
+        });
+
+        this.zoomOutBtn.addEventListener('click', () => {
+            this.onZoomOut?.();
+        });
+
+        this.resetZoomBtn.addEventListener('click', () => {
+            this.onResetZoom?.();
+        });
+
+        this.fitContentBtn.addEventListener('click', () => {
+            this.onFitContent?.();
         });
 
         this.imageInput.addEventListener('change', () => {
@@ -220,10 +255,12 @@ export class UIManager {
 
     showMenu(): void {
         this.menuOverlay.classList.remove('hidden');
+        this.viewportControls.classList.add('hidden');
     }
 
     hideMenu(): void {
         this.menuOverlay.classList.add('hidden');
+        this.viewportControls.classList.remove('hidden');
     }
 
     getPieceCount(): number {
@@ -252,11 +289,19 @@ export class UIManager {
         onStartGame?: () => void;
         onNewGame?: () => void;
         onPieceCountChanged?: (count: number) => void;
+        onZoomIn?: () => void;
+        onZoomOut?: () => void;
+        onResetZoom?: () => void;
+        onFitContent?: () => void;
     }): void {
         this.onImageSelected = callbacks.onImageSelected;
         this.onStartGame = callbacks.onStartGame;
         this.onNewGame = callbacks.onNewGame;
         this.onPieceCountChanged = callbacks.onPieceCountChanged;
+        this.onZoomIn = callbacks.onZoomIn;
+        this.onZoomOut = callbacks.onZoomOut;
+        this.onResetZoom = callbacks.onResetZoom;
+        this.onFitContent = callbacks.onFitContent;
     }
 
     cleanup(): void {
