@@ -24,8 +24,8 @@ export class ViewportManager {
         this.viewport = { x: 0, y: 0, zoom: 1 };
     }
     pan(deltaX, deltaY) {
-        this.viewport.x -= deltaX / this.viewport.zoom;
-        this.viewport.y -= deltaY / this.viewport.zoom;
+        this.viewport.x += deltaX / this.viewport.zoom;
+        this.viewport.y += deltaY / this.viewport.zoom;
         this.constrainViewport();
     }
     zoom(factor, centerX, centerY) {
@@ -79,8 +79,11 @@ export class ViewportManager {
         const canvasHeight = this.canvas.height;
         const viewWidth = canvasWidth / this.viewport.zoom;
         const viewHeight = canvasHeight / this.viewport.zoom;
-        this.viewport.x = MathUtils.clamp(this.viewport.x, this.panBounds.left, this.panBounds.right - viewWidth);
-        this.viewport.y = MathUtils.clamp(this.viewport.y, this.panBounds.top, this.panBounds.bottom - viewHeight);
+        // Allow more freedom when zoomed out (smaller zoom values)
+        // When zoomed out, allow panning beyond content bounds for better UX
+        const panMargin = Math.max(viewWidth, viewHeight) * 0.5; // Extra margin when zoomed out
+        this.viewport.x = MathUtils.clamp(this.viewport.x, this.panBounds.left - panMargin, Math.max(this.panBounds.right - viewWidth + panMargin, this.panBounds.left));
+        this.viewport.y = MathUtils.clamp(this.viewport.y, this.panBounds.top - panMargin, Math.max(this.panBounds.bottom - viewHeight + panMargin, this.panBounds.top));
     }
     fitToContent(contentBounds, padding = 50) {
         const canvasWidth = this.canvas.width;
