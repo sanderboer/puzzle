@@ -26,6 +26,9 @@ export class Game {
     private pieceGroups = new Map<PuzzlePiece, PuzzlePiece[]>();
     private groupDragData: GroupDragData | null = null;
     private seedCache = new Map<string, number>();
+    
+    // Mouse panning state
+    private mousePanData: { startX: number; startY: number; isPanning: boolean } | null = null;
 
     private uiManager: UIManager;
     private renderer: CanvasRenderer;
@@ -468,6 +471,8 @@ export class Game {
             const screenCoords = DOMUtils.getCanvasCoordinates(event, this.renderer.getCanvas());
             const worldCoords = viewportManager.screenToWorld(screenCoords);
             
+            let pieceClicked = false;
+            
             for (let i = this.pieces.length - 1; i >= 0; i--) {
                 const piece = this.pieces[i];
                 if (piece.isPointInside(worldCoords.x, worldCoords.y)) {
@@ -484,8 +489,18 @@ export class Game {
                             y: groupPiece.y
                         }))
                     };
+                    pieceClicked = true;
                     break;
                 }
+            }
+            
+            // If no piece was clicked, start mouse panning
+            if (!pieceClicked) {
+                this.mousePanData = {
+                    startX: screenCoords.x,
+                    startY: screenCoords.y,
+                    isPanning: false  // Will become true on first move
+                };
             }
             
             this.draw();
@@ -495,38 +510,64 @@ export class Game {
     }
 
     private handleMouseMove(event: MouseEvent): void {
-        if (this.gameState !== 'playing' || !this.draggedPiece || !this.groupDragData) return;
+        if (this.gameState !== 'playing') return;
 
         try {
             const viewportManager = this.renderer.getViewportManager();
             const screenCoords = DOMUtils.getCanvasCoordinates(event, this.renderer.getCanvas());
-            const worldCoords = viewportManager.screenToWorld(screenCoords);
-            const dx = worldCoords.x - this.groupDragData.startMouseX;
-            const dy = worldCoords.y - this.groupDragData.startMouseY;
+            
+            // Handle piece dragging
+            if (this.draggedPiece && this.groupDragData) {
+                const worldCoords = viewportManager.screenToWorld(screenCoords);
+                const dx = worldCoords.x - this.groupDragData.startMouseX;
+                const dy = worldCoords.y - this.groupDragData.startMouseY;
 
-            for (const entry of this.groupDragData.pieces) {
-                entry.piece.x = entry.x + dx;
-                entry.piece.y = entry.y + dy;
+                for (const entry of this.groupDragData.pieces) {
+                    entry.piece.x = entry.x + dx;
+                    entry.piece.y = entry.y + dy;
+                }
+                
+                this.draw();
             }
-
-            this.draw();
+            // Handle mouse panning
+            else if (this.mousePanData) {
+                const deltaX = screenCoords.x - this.mousePanData.startX;
+                const deltaY = screenCoords.y - this.mousePanData.startY;
+                
+                // Only start panning after some movement threshold
+                if (!this.mousePanData.isPanning && (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5)) {
+                    this.mousePanData.isPanning = true;
+                }
+                
+                if (this.mousePanData.isPanning) {
+                    viewportManager.pan(deltaX, deltaY);
+                    
+                    // Update start position for continuous panning
+                    this.mousePanData.startX = screenCoords.x;
+                    this.mousePanData.startY = screenCoords.y;
+                    
+                    this.draw();
+                }
+            }
         } catch (error) {
             console.error('Error handling mouse move:', error);
         }
     }
 
     private handleMouseUp(_: MouseEvent): void {
-        if (this.gameState !== 'playing' || !this.draggedPiece) {
-            this.groupDragData = null;
-            return;
-        }
+        if (this.gameState !== 'playing') return;
 
         try {
-            this.checkConnections();
-            this.draggedPiece = null;
-            this.groupDragData = null;
-            this.saveManager.requestSave('piece_drop', this.getGameData());
-            this.draw();
+            // Clear mouse panning state
+            this.mousePanData = null;
+            
+            if (this.draggedPiece) {
+                this.checkConnections();
+                this.draggedPiece = null;
+                this.groupDragData = null;
+                this.saveManager.requestSave('piece_drop', this.getGameData());
+                this.draw();
+            }
         } catch (error) {
             console.error('Error handling mouse up:', error);
         }
