@@ -33,6 +33,13 @@ export class TouchManager {
         // Scale coordinates to match canvas resolution
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
+        console.log('COORDINATE SCALING DEBUG:');
+        console.log('  Raw touch:', clientX, clientY);
+        console.log('  Canvas rect:', rect.left, rect.top, rect.width, rect.height);
+        console.log('  Canvas resolution:', canvas.width, canvas.height);
+        console.log('  CSS coordinates:', x, y);
+        console.log('  Scale factors:', scaleX, scaleY);
+        console.log('  Final scaled coordinates:', x * scaleX, y * scaleY);
         return {
             x: x * scaleX,
             y: y * scaleY
@@ -128,7 +135,7 @@ export class TouchManager {
             // If not dragging a piece, pan the viewport (but only after some movement threshold)
             if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
                 console.log('Panning viewport:', deltaX, deltaY);
-                this.onPan(-deltaX, -deltaY);
+                this.onPan(deltaX, deltaY);
                 touch.startX = touch.currentX;
                 touch.startY = touch.currentY;
             }
@@ -159,7 +166,7 @@ export class TouchManager {
             const deltaX = centerX - prevCenterX;
             const deltaY = centerY - prevCenterY;
             if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
-                this.onPan(-deltaX, -deltaY);
+                this.onPan(deltaX, deltaY);
                 // Update start positions for continuous panning
                 touch1.startX = touch1.currentX;
                 touch1.startY = touch1.currentY;
