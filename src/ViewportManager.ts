@@ -44,15 +44,9 @@ export class ViewportManager {
         if (newZoom === oldZoom) return;
 
         if (centerX !== undefined && centerY !== undefined) {
-            console.log('VIEWPORT ZOOM DEBUG:');
-            console.log('  Center coordinates:', centerX, centerY);
-            console.log('  Old zoom:', oldZoom, 'New zoom:', newZoom);
-            console.log('  Old viewport:', this.viewport.x, this.viewport.y);
-            
             // Calculate where the center point is in world coordinates before zoom
             const worldX = (centerX / oldZoom) + this.viewport.x;
             const worldY = (centerY / oldZoom) + this.viewport.y;
-            console.log('  World point:', worldX, worldY);
             
             // Update zoom
             this.viewport.zoom = newZoom;
@@ -60,7 +54,6 @@ export class ViewportManager {
             // Adjust viewport so the same world point appears at the center screen position
             this.viewport.x = worldX - (centerX / newZoom);
             this.viewport.y = worldY - (centerY / newZoom);
-            console.log('  New viewport:', this.viewport.x, this.viewport.y);
         } else {
             this.viewport.zoom = newZoom;
         }
