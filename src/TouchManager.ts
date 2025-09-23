@@ -29,27 +29,57 @@ export class TouchManager {
         this.element.addEventListener('touchcancel', (e) => this.handleTouchCancel(e), { passive: false });
     }
 
+    private getScaledCoordinates(clientX: number, clientY: number): { x: number, y: number } {
+        const rect = this.element.getBoundingClientRect();
+        const canvas = this.element as HTMLCanvasElement;
+        
+        // Get coordinates relative to canvas CSS bounds
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+        
+        // Scale coordinates to match canvas resolution
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        
+        // Add safety check for invalid scaling
+        if (!isFinite(scaleX) || !isFinite(scaleY) || scaleX <= 0 || scaleY <= 0) {
+            console.warn('Invalid canvas scaling detected, using CSS coordinates');
+            return { x, y };
+        }
+        
+        console.log('COORDINATE SCALING DEBUG:');
+        console.log('  Raw touch:', clientX, clientY);
+        console.log('  Canvas rect:', rect.left, rect.top, rect.width, rect.height);
+        console.log('  Canvas resolution:', canvas.width, canvas.height);
+        console.log('  CSS coordinates:', x, y);
+        console.log('  Scale factors:', scaleX, scaleY);
+        console.log('  Final scaled coordinates:', x * scaleX, y * scaleY);
+        
+        return {
+            x: x * scaleX,
+            y: y * scaleY
+        };
+    }
+
     private handleTouchStart(event: TouchEvent): void {
         event.preventDefault();
 
         for (let i = 0; i < event.changedTouches.length; i++) {
             const touch = event.changedTouches[i];
-            const rect = this.element.getBoundingClientRect();
-            const x = touch.clientX - rect.left;
-            const y = touch.clientY - rect.top;
+            const coords = this.getScaledCoordinates(touch.clientX, touch.clientY);
 
             this.activeTouches.set(touch.identifier, {
                 identifier: touch.identifier,
-                startX: x,
-                startY: y,
-                currentX: x,
-                currentY: y
+                startX: coords.x,
+                startY: coords.y,
+                currentX: coords.x,
+                currentY: coords.y
             });
 
             if (this.activeTouches.size === 1) {
                 // Check if a piece was selected for dragging
                 console.log('Single finger touch, checking for piece selection...');
-                this.isDraggingPiece = this.onTouchStart(x, y);
+                this.isDraggingPiece = this.onTouchStart(coords.x, coords.y);
                 console.log('Piece selection result:', this.isDraggingPiece);
             } else if (this.activeTouches.size === 2) {
                 // Two fingers - start pinch/pan gesture
@@ -67,12 +97,10 @@ export class TouchManager {
             const touchData = this.activeTouches.get(touch.identifier);
             if (!touchData) continue;
 
-            const rect = this.element.getBoundingClientRect();
-            const x = touch.clientX - rect.left;
-            const y = touch.clientY - rect.top;
+            const coords = this.getScaledCoordinates(touch.clientX, touch.clientY);
 
-            touchData.currentX = x;
-            touchData.currentY = y;
+            touchData.currentX = coords.x;
+            touchData.currentY = coords.y;
         }
 
         if (this.activeTouches.size === 1) {
@@ -135,7 +163,7 @@ export class TouchManager {
             // If not dragging a piece, pan the viewport (but only after some movement threshold)
             if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
                 console.log('Panning viewport:', deltaX, deltaY);
-                this.onPan(-deltaX, -deltaY);
+                this.onPan(deltaX, deltaY);
                 touch.startX = touch.currentX;
                 touch.startY = touch.currentY;
             }
@@ -160,6 +188,10 @@ export class TouchManager {
             // Dampen the zoom to make it less sensitive
             const dampedScale = 1 + (rawScale - 1) * 0.5;
             
+            console.log('PINCH ZOOM DEBUG:');
+            console.log('  Pinch center (scaled):', this.pinchData.centerX, this.pinchData.centerY);
+            console.log('  Scale factor:', dampedScale);
+            
             this.onPinch(dampedScale, this.pinchData.centerX, this.pinchData.centerY);
             this.pinchData.startDistance = currentDistance;
         } else {
@@ -174,7 +206,7 @@ export class TouchManager {
             const deltaY = centerY - prevCenterY;
             
             if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
-                this.onPan(-deltaX, -deltaY);
+                this.onPan(deltaX, deltaY);
                 
                 // Update start positions for continuous panning
                 touch1.startX = touch1.currentX;
@@ -223,8 +255,29 @@ export class TouchManager {
             Math.pow(touch2.currentY - touch1.currentY, 2)
         );
 
-        const centerX = (touch1.currentX + touch2.currentX) / 2;
-        const centerY = (touch1.currentY + touch2.currentY) / 2;
+        // For pinch zoom center, we need SCREEN coordinates (CSS coordinates)
+        // Get the raw touch positions and calculate center in CSS space
+        const rect = this.element.getBoundingClientRect();
+        
+        // Convert scaled coordinates back to CSS coordinates
+        const canvas = this.element as HTMLCanvasElement;
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        
+        const cssX1 = touch1.currentX / scaleX;
+        const cssY1 = touch1.currentY / scaleY;
+        const cssX2 = touch2.currentX / scaleX; 
+        const cssY2 = touch2.currentY / scaleY;
+        
+        const centerX = (cssX1 + cssX2) / 2;
+        const centerY = (cssY1 + cssY2) / 2;
+
+        console.log('PINCH INIT DEBUG:');
+        console.log('  Touch 1 scaled:', touch1.currentX, touch1.currentY);
+        console.log('  Touch 2 scaled:', touch2.currentX, touch2.currentY);
+        console.log('  Touch 1 CSS:', cssX1, cssY1);
+        console.log('  Touch 2 CSS:', cssX2, cssY2);
+        console.log('  Center CSS:', centerX, centerY);
 
         this.pinchData = {
             startDistance: distance,

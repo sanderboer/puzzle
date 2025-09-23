@@ -32,8 +32,8 @@ export class ViewportManager {
     }
 
     pan(deltaX: number, deltaY: number): void {
-        this.viewport.x -= deltaX / this.viewport.zoom;
-        this.viewport.y -= deltaY / this.viewport.zoom;
+        this.viewport.x += deltaX / this.viewport.zoom;
+        this.viewport.y += deltaY / this.viewport.zoom;
         this.constrainViewport();
     }
 
@@ -44,9 +44,17 @@ export class ViewportManager {
         if (newZoom === oldZoom) return;
 
         if (centerX !== undefined && centerY !== undefined) {
+            console.log('VIEWPORT ZOOM DEBUG:');
+            console.log('  Center coordinates:', centerX, centerY);
+            console.log('  Canvas dimensions:', this.canvas.width, this.canvas.height);
+            
             const worldPoint = this.screenToWorld({ x: centerX, y: centerY });
+            console.log('  World point:', worldPoint);
+            
             this.viewport.zoom = newZoom;
             const newScreenPoint = this.worldToScreen(worldPoint);
+            console.log('  New screen point:', newScreenPoint);
+            
             this.viewport.x += (centerX - newScreenPoint.x) / this.viewport.zoom;
             this.viewport.y += (centerY - newScreenPoint.y) / this.viewport.zoom;
         } else {
@@ -96,16 +104,20 @@ export class ViewportManager {
         const viewWidth = canvasWidth / this.viewport.zoom;
         const viewHeight = canvasHeight / this.viewport.zoom;
         
+        // Allow more freedom when zoomed out (smaller zoom values)
+        // When zoomed out, allow panning beyond content bounds for better UX
+        const panMargin = Math.max(viewWidth, viewHeight) * 0.5; // Extra margin when zoomed out
+        
         this.viewport.x = MathUtils.clamp(
             this.viewport.x,
-            this.panBounds.left,
-            this.panBounds.right - viewWidth
+            this.panBounds.left - panMargin,
+            Math.max(this.panBounds.right - viewWidth + panMargin, this.panBounds.left)
         );
         
         this.viewport.y = MathUtils.clamp(
             this.viewport.y,
-            this.panBounds.top,
-            this.panBounds.bottom - viewHeight
+            this.panBounds.top - panMargin,
+            Math.max(this.panBounds.bottom - viewHeight + panMargin, this.panBounds.top)
         );
     }
 
