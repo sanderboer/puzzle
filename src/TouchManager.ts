@@ -48,7 +48,9 @@ export class TouchManager {
 
             if (this.activeTouches.size === 1) {
                 // Check if a piece was selected for dragging
+                console.log('Single finger touch, checking for piece selection...');
                 this.isDraggingPiece = this.onTouchStart(x, y);
+                console.log('Piece selection result:', this.isDraggingPiece);
             } else if (this.activeTouches.size === 2) {
                 // Two fingers - start pinch/pan gesture
                 this.isDraggingPiece = false;
@@ -127,10 +129,12 @@ export class TouchManager {
 
         if (this.isDraggingPiece) {
             // If dragging a piece, send move events to the game
+            console.log('Moving piece:', touch.currentX, touch.currentY);
             this.onTouchMove(touch.currentX, touch.currentY, deltaX, deltaY);
         } else {
             // If not dragging a piece, pan the viewport (but only after some movement threshold)
             if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
+                console.log('Panning viewport:', deltaX, deltaY);
                 this.onPan(-deltaX, -deltaY);
                 touch.startX = touch.currentX;
                 touch.startY = touch.currentY;

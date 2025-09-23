@@ -453,13 +453,20 @@ export class Game {
         }
     }
     handleTouchStart(x, y) {
-        if (this.gameState !== 'playing')
+        console.log('TouchStart called:', { x, y, gameState: this.gameState, pieceCount: this.pieces.length });
+        if (this.gameState !== 'playing') {
+            console.log('Game not playing, returning false');
             return false;
+        }
         const viewportManager = this.renderer.getViewportManager();
         const worldCoords = viewportManager.screenToWorld({ x, y });
+        console.log('World coords:', worldCoords);
         for (let i = this.pieces.length - 1; i >= 0; i--) {
             const piece = this.pieces[i];
-            if (piece.isPointInside(worldCoords.x, worldCoords.y)) {
+            const isInside = piece.isPointInside(worldCoords.x, worldCoords.y);
+            console.log(`Piece ${i}: bounds(${piece.x}, ${piece.y}, ${piece.width}, ${piece.height}), inside: ${isInside}`);
+            if (isInside) {
+                console.log('Piece selected!', piece);
                 this.draggedPiece = piece;
                 this.selectedPiece = piece;
                 const group = this.getGroup(piece);
@@ -476,6 +483,7 @@ export class Game {
                 return true; // Piece was selected
             }
         }
+        console.log('No piece selected');
         return false; // No piece selected
     }
     handleTouchMove(x, y, deltaX, deltaY) {
