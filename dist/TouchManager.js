@@ -135,7 +135,7 @@ export class TouchManager {
             // If not dragging a piece, pan the viewport (but only after some movement threshold)
             if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
                 console.log('Panning viewport:', deltaX, deltaY);
-                this.onPan(deltaX, deltaY);
+                this.onPan(-deltaX, -deltaY);
                 touch.startX = touch.currentX;
                 touch.startY = touch.currentY;
             }
@@ -169,7 +169,7 @@ export class TouchManager {
             const deltaX = centerX - prevCenterX;
             const deltaY = centerY - prevCenterY;
             if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
-                this.onPan(deltaX, deltaY);
+                this.onPan(-deltaX, -deltaY);
                 // Update start positions for continuous panning
                 touch1.startX = touch1.currentX;
                 touch1.startY = touch1.currentY;
@@ -208,8 +208,14 @@ export class TouchManager {
         const touch2 = touchArray[1];
         const distance = Math.sqrt(Math.pow(touch2.currentX - touch1.currentX, 2) +
             Math.pow(touch2.currentY - touch1.currentY, 2));
-        const centerX = (touch1.currentX + touch2.currentX) / 2;
-        const centerY = (touch1.currentY + touch2.currentY) / 2;
+        // Calculate center in SCREEN coordinates (CSS coordinates) for zoom center
+        const rect = this.element.getBoundingClientRect();
+        const canvas = this.element;
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        // Convert scaled coordinates back to screen coordinates for zoom center
+        const centerX = ((touch1.currentX + touch2.currentX) / 2) / scaleX;
+        const centerY = ((touch1.currentY + touch2.currentY) / 2) / scaleY;
         this.pinchData = {
             startDistance: distance,
             startZoom: 1,
